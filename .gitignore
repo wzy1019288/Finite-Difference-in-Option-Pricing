@@ -3,3 +3,7 @@
 .vscode\
 
 resource\
+
+.history
+
+*.pyc

@@ -1,6 +1,7 @@
 from _option_pricing import *
 
 class FiniteDifference(OptionPricingMethod):
+    '''有限差分'''
     
     def __init__(self, S, K, r, q, T, sigma, option_type, Smin, Smax, Ns, Nt):
         super().__init__(S, K, r, q, T, sigma, option_type)
@@ -51,6 +52,7 @@ class FiniteDifference(OptionPricingMethod):
 
 
 class FullyExplicitEu(FiniteDifference):
+    '''完全显式格式'''
     
     def _set_matrix_(self):
         self.A = sp.diags([self.l[1:], self.c, self.u[:-1]], [-1, 0, 1],  format='csc')
@@ -66,6 +68,7 @@ class FullyExplicitEu(FiniteDifference):
 
 
 class FullyImplicitEu(FiniteDifference):
+    '''完全隐式格式'''
 
     def _set_matrix_(self):
         self.A = sp.diags([self.l[1:], self.c, self.u[:-1]], [-1, 0, 1],  format='csc')
@@ -84,6 +87,7 @@ class FullyImplicitEu(FiniteDifference):
 
 
 class CrankNicolsonEu(FiniteDifference):
+    '''C-N格式'''
 
     theta = 0.5
     
