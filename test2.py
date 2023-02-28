@@ -57,13 +57,13 @@ def plot_grid_withTCBC( S_arr, t_arr ):
     
     # 给边界条件和终止条件的点上颜色，并标注
     ax.scatter(S_mat[[0, -1]], t_mat[[0, 1]], facecolor=dt_hex, s=60, edgecolors=None)
-    ax.scatter(S_mat[:, -1], t_mat[:, -1], facecolor=r_hex, s=60, edgecolors=None)
+    ax.scatter(S_mat[:, -1], t_mat[:, 0], facecolor=r_hex, s=60, edgecolors=None)
 
     dt = t_arr[1]-t_arr[0]
     dS = S_arr[1]-S_arr[0]
-    ax.text(t_arr.mean(), S_arr.min()-S/10, '边界条件', ha='center', color=dt_hex)
-    ax.text(t_arr.mean(), S_arr.max()+S/20, '边界条件', ha='center', color=dt_hex)
-    ax.text(t_arr.max()+dt/8, S_arr.mean(), '终值条件', rotation='vertical', color=r_hex)
+    ax.text(S_arr.mean(), t_arr.min() - T/10, '终值条件', ha='center', color=r_hex)
+    ax.text(S_arr.min() - S/10, t_arr.mean(), '边界条件', rotation='vertical', color=dt_hex)
+    ax.text(S_arr.max() + S/20, t_arr.mean(), '边界条件', rotation='vertical', color=dt_hex)
     
     return ax
     
@@ -71,6 +71,7 @@ def plot_grid_withTCBC( S_arr, t_arr ):
 (Smin, Smax, Tmin, Tmax, Ns, Nt) = (0, np.maximum(S,K), 0, T, 4, 4)
 S_arr, t_arr = np.linspace(Smin, Smax, Ns+1), np.linspace(Tmin, Tmax, Nt+1)
 
+# 完全显式 ///////////////////////////////////////////////////////////////////////////////////////////
 ax = plot_grid_withTCBC( S_arr, t_arr )
 
 size=10
@@ -79,19 +80,88 @@ dS = S_arr[1]-S_arr[0]
 
 (i,j) = (2,2)
 (ti,Sj) = (t_arr[i], S_arr[j])
-ax.plot( [ti, ti+dt], [Sj, Sj-dS], color='k', alpha=0.2, zorder=0 )
-ax.plot( [ti, ti+dt], [Sj, Sj], color='k', alpha=0.2, zorder=0 )
-ax.plot( [ti, ti+dt], [Sj, Sj+dS], color='k', alpha=0.2, zorder=0 )
 
-ax.scatter(ti+dt, Sj, facecolor=g_hex, s=60, edgecolors=None, zorder=1 )
-ax.scatter(ti+dt, Sj-dS, facecolor='b', s=60, edgecolors=None, zorder=1 )
-ax.scatter(ti+dt, Sj+dS, facecolor='b', s=60, edgecolors=None, zorder=1 )
-ax.scatter(ti, Sj, facecolor='b', s=60, edgecolors=None, zorder=1 )
+ax.plot( [Sj, Sj-dS], [ti-dt, ti], color='k', alpha=0.2, zorder=0 )
+ax.plot( [Sj, Sj], [ti-dt, ti], color='k', alpha=0.2, zorder=0 )
+ax.plot( [Sj, Sj+dS], [ti-dt, ti], color='k', alpha=0.2, zorder=0 )
 
-ax.text( ti+dt, Sj-1.3*dS, '完全显式', ha='center', size=14 )
-ax.text( ti-0.1*dt, Sj, '$V(t_{i-1}, S_j)$', ha='right', color='b', size=size )
-ax.text( ti+1.1*dt, Sj-dS, '$V(t_{i}, S_{j-1})$', ha='left', color='b',  size=size )
-ax.text( ti+1.1*dt, Sj, '$V(t_{i}, S_{j})}$', ha='left', color=g_hex, size=size )
-ax.text( ti+1.1*dt, Sj+dS, '$V(t_{i}, S_{j+1})$', ha='left',  color='b', size=size )
+
+ax.scatter(Sj, ti, facecolor='b', s=60, edgecolors=None, zorder=1 )
+ax.scatter(Sj-dS, ti, facecolor='b', s=60, edgecolors=None, zorder=1 )
+ax.scatter(Sj+dS, ti, facecolor='b', s=60, edgecolors=None, zorder=1 )
+ax.scatter(Sj, ti-dt, facecolor=g_hex, s=60, edgecolors=None, zorder=1 )
+
+ax.text( Sj, ti+0.3*dt, '完全显式', ha='center', size=14 )
+ax.text( Sj, ti+0.1*dt, '$u(S_j, t_i)$', ha='right', color='b', size=size )
+ax.text( Sj-dS, ti+0.1*dt, '$u(S_{j-1}, t_i)$', ha='right', color='b', size=size )
+ax.text( Sj+dS, ti+0.1*dt, '$u(S_{j+1}, t_i)$', ha='right', color='b', size=size )
+ax.text( Sj, ti-1.2*dt, '$u(S_j, t_{i-1})$', ha='right', color='b', size=size )
+
+plt.show()
+
+
+# 完全隐式 ///////////////////////////////////////////////////////////////////////////////////////////
+ax = plot_grid_withTCBC( S_arr, t_arr )
+
+size=10
+dt = t_arr[1]-t_arr[0]
+dS = S_arr[1]-S_arr[0]
+
+(i,j) = (2,2)
+(ti,Sj) = (t_arr[i], S_arr[j])
+
+ax.plot( [Sj, Sj-dS], [ti+dt, ti], color='k', alpha=0.2, zorder=0 )
+ax.plot( [Sj, Sj], [ti+dt, ti], color='k', alpha=0.2, zorder=0 )
+ax.plot( [Sj, Sj+dS], [ti+dt, ti], color='k', alpha=0.2, zorder=0 )
+
+
+ax.scatter(Sj, ti, facecolor='b', s=60, edgecolors=None, zorder=1 )
+ax.scatter(Sj-dS, ti, facecolor='b', s=60, edgecolors=None, zorder=1 )
+ax.scatter(Sj+dS, ti, facecolor='b', s=60, edgecolors=None, zorder=1 )
+ax.scatter(Sj, ti+dt, facecolor=g_hex, s=60, edgecolors=None, zorder=1 )
+
+ax.text( Sj, ti-0.3*dt, '完全隐式', ha='center', size=14 )
+ax.text( Sj, ti+0.1*dt, '$u(S_j, t_i)$', ha='right', color='b', size=size )
+ax.text( Sj-dS, ti+0.1*dt, '$u(S_{j-1}, t_i)$', ha='right', color='b', size=size )
+ax.text( Sj+dS, ti+0.1*dt, '$u(S_{j+1}, t_i)$', ha='right', color='b', size=size )
+ax.text( Sj, ti+1.1*dt, '$u(S_j, t_{i+1})$', ha='right', color='b', size=size )
+
+plt.show()
+
+
+# C-N 格式 ///////////////////////////////////////////////////////////////////////////////////////////
+ax = plot_grid_withTCBC( S_arr, t_arr )
+
+size=10
+dt = t_arr[1]-t_arr[0]
+dS = S_arr[1]-S_arr[0]
+
+(i,j) = (2,2)
+(ti,Sj) = (t_arr[i], S_arr[j])
+
+ax.plot( [Sj, Sj], [ti, ti+dt], color='k', alpha=0.2, zorder=0 )
+ax.plot( [Sj-dS, Sj+dS], [ti, ti+dt], color='k', alpha=0.2, zorder=0 )
+ax.plot( [Sj+dS, Sj-dS], [ti, ti+dt], color='k', alpha=0.2, zorder=0 )
+
+ax.scatter(Sj, ti+0.5*dt, facecolor=g_hex, s=60, edgecolors=None, zorder=1 )
+
+ax.scatter(Sj-dS, ti, facecolor='b', s=60, edgecolors=None, zorder=1 )
+ax.scatter(Sj+dS, ti, facecolor='b', s=60, edgecolors=None, zorder=1 )
+ax.scatter(Sj, ti, facecolor='b', s=60, edgecolors=None, zorder=1 )
+ax.scatter(Sj-dS, ti+dt, facecolor='b', s=60, edgecolors=None, zorder=1 )
+ax.scatter(Sj+dS, ti+dt, facecolor='b', s=60, edgecolors=None, zorder=1 )
+ax.scatter(Sj, ti+dt, facecolor='b', s=60, edgecolors=None, zorder=1 )
+
+ax.text( Sj, ti-0.5*dt, 'CN 式', ha='center', size=14 )
+
+ax.text( Sj-0.45*dS, ti+0.5*dt, '$u(S_{j}, t_{i+0.5})$', ha='center', color=g_hex, size=10, zorder=1 )
+
+ax.text( Sj-dS, ti-0.2*dt, '$u(S_{j-1}, t_i)$', ha='right', color='b', size=size )
+ax.text( Sj, ti-0.2*dt, '$u(S_j, t_i)$', ha='right', color='b', size=size )
+ax.text( Sj+dS, ti-0.2*dt, '$u(S_{j+1}, t_i)$', ha='right', color='b', size=size )
+
+ax.text( Sj-dS, ti+1.1*dt, '$u(S_{j-1}, t_{i+1})$', ha='right', color='b', size=size )
+ax.text( Sj, ti+1.1*dt, '$u(S_j, t_{i+1})$', ha='right', color='b', size=size )
+ax.text( Sj+dS, ti+1.1*dt, '$u(S_{j+1}, t_{i+1})$', ha='right', color='b', size=size )
 
 plt.show()
