@@ -45,7 +45,6 @@ blackscholes(S, K, r, T, sigma, option_type)
 
 
 '''有限差分法'''
-(Ns, Nt) = (200, 200)
 
 class OptionPricingMethod():
     
@@ -88,16 +87,16 @@ class FiniteDifference(OptionPricingMethod):
         self.grid[:, -1] = np.maximum(self.omega*(np.e ** self.Xvec[-1] - self.K), 0)
         
     def _set_coefficient__(self):
-        self.a = self.r / (2 * self.h) - ((self.h + 2) / (4 * self.h**2)) * self.sigma**2
-        self.b = self.r + (self.sigma/self.h)**2
-        self.c = -(((2 - self.h) / (4 * self.h**2)) * self.sigma**2 + self.r / (2 * self.h))
+        self.a = ((self.h + 2) / (4 * self.h**2)) * self.sigma**2 - self.r / (2 * self.h)
+        self.b = -(self.r + (self.sigma/self.h)**2)
+        self.c = ((2 - self.h) / (4 * self.h**2)) * self.sigma**2 + self.r / (2 * self.h)
         
     def _solve_(self):
         pass
     
     def _interpolate_(self):
         tck = spi.splrep( self.Xvec, self.grid[0, :], k=3 )
-        return np.e ** spi.splev( self.X, tck )
+        return spi.splev( self.X, tck )
         #return np.interp(self.S, self.Svec, self.grid[:,0])
     
     def price(self):
@@ -123,14 +122,48 @@ class FullyExplicitEu(FiniteDifference):
             _tmp[0] += self.tau * self.a * self.grid[j+1, 0]
             _tmp[-1] += self.tau * self.c * self.grid[j+1, -1]
             self.grid[j, 1:-1] = _tmp
-            # if j < 5:
-            print(j)
-            print(_tmp)
-            # print(pd.DataFrame(self.grid))
-            input()
+
+
+def solve_thoma(a, b, c, d):
+    '''
+    利用追赶法求解解线性方程组
+    ---
+    
+    a1 = cn = 0, 即a[0] = c[-1] = 0
+
+    ::
+        
+        A = [b1  c1  0   0   ...  0     0   ]   b = [ d1 ]
+            [a2  b2  c2  0   ...  0     0   ]       [ d2 ]
+            [0   a3  b3  c3  ...  0     0   ]       [ d3 ]
+            [0   0   a4  b4  ...  0     0   ]       [ d4 ]
+            [:   :   :   :   ...  :     :   ]       [ :  ]
+            [0   0   0   0   ...  bn-1  cn-1]       [dn-1]
+            [0   0   0   0   ...  an    bn  ]       [ dn ]
+    '''
+    aa = a.copy()
+    bb = b.copy()
+    cc = c.copy()
+    dd = d.copy()
+    n = len(dd)
+    x = np.ones_like(dd, dtype=float)
+    y = np.ones_like(dd, dtype=float)
+    aa[0] = 0
+    cc[0] = cc[0] / bb[0]
+    y[0] = dd[0] / bb[0]    # update
+    for i in range(1, n): # forward
+        bb[i] = bb[i] - aa[i] * cc[i - 1] # store l in b and l[0]=b[0]
+        y[i] = (dd[i] - aa[i] * y[i - 1]) / bb[i]
+        cc[i] = cc[i] / bb[i] # store u in c and and u[0]=c[0]/b[0]
+
+    x[n - 1] = y[n - 1] # backward
+    for i in range(n - 2, -1, -1):  # update
+        x[i] = y[i] - cc[i] * x[i + 1]
+    return x
 
 
 class FullyImplicitEu(FiniteDifference):
+    '''完全隐式格式'''
 
     def _set_matrix_(self):
         self.B = sp.diags([[self.a]*(self.Nx-2), [self.b]*(self.Nx-1), [self.c]*(self.Nx-2)], [-1, 0, 1],  format='csc').toarray()
@@ -141,7 +174,7 @@ class FullyImplicitEu(FiniteDifference):
         _, M_lower, M_upper = sla.lu(self.M)
 
         for j in reversed(np.arange(self.Nt)):     
-            _tmp = self.M.dot(self.grid[j+1, 1:-1])
+            _tmp = self.grid[j+1, 1:-1]
             _tmp[0] += self.tau * self.a * self.grid[j, 0]
             _tmp[-1] += self.tau * self.c * self.grid[j, -1]
             _tmp = sla.solve_triangular( M_lower, _tmp, lower=True )
@@ -150,47 +183,8 @@ class FullyImplicitEu(FiniteDifference):
 
 
 
-option = FullyExplicitEu(S, K, r, T, sigma, option_type, Nx=50, Nt=100)
+option = FullyExplicitEu(S, K, r, T, sigma, option_type, Nx=50, Nt=50)
+option.price()
 
-
-option._set_terminal_condition_()
-option._set_boundary_condition_()
-# option._set_coefficient__()
-# option.a
-# option.b
-# option.c
-# option._set_matrix_()
-# pd.DataFrame(option.B)
-# pd.DataFrame(option.I)
-# pd.DataFrame(option.M)
-# option._solve_()
-# pd.DataFrame(option.grid)
-
-option.Xmax
-option.Xmin
-
-np.log(50)
-
-pd.DataFrame(option.grid)
-
-option.a = option.r / (2 * option.h) - ((option.h + 2) / (4 * option.h**2)) * option.sigma**2
-option.b = option.r + (option.sigma/option.h)**2
-option.c = -(((2 - option.h) / (4 * option.h**2)) * option.sigma**2 + option.r / (2 * option.h))
-
-
-option.B = sp.diags([[option.a]*(option.Nx-2), [option.b]*(option.Nx-1), [option.c]*(option.Nx-2)], [-1, 0, 1],  format='csc').toarray()
-option.I = sp.eye(option.Nx-1).toarray()
-option.M = option.I + option.tau * option.B
-
-
-for j in reversed(np.arange(option.Nt)):
-
-    _tmp = option.M.dot(option.grid[j+1, 1:-1])
-    _tmp[0] += option.tau * option.a * option.grid[j+1, 0]
-    _tmp[-1] += option.tau * option.c * option.grid[j+1, -1]
-    option.grid[j, 1:-1] = _tmp
-    # if j < 5:
-    print(j)
-    print(_tmp)
-    # print(pd.DataFrame(self.grid))
-    input()
+option = FullyImplicitEu(S, K, r, T, sigma, option_type, Nx=5000, Nt=5000)
+option.price()
