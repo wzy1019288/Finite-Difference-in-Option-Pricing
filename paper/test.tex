@@ -2,11 +2,14 @@
 \documentclass{article}
 \usepackage{ctex}
 \usepackage{amsmath}
-% \usepackage{graphicx}
-
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{array}
+ 
 \title{期权定价实验}
 \author{}
 \date{February 2023}
+
 
 \begin{document}
 
@@ -17,8 +20,29 @@
 
 \section{变量代换}
 
-我们首先进行变量代换，令$\tau = t-T$，$x = \ln S$，则原方程可以变为：
+已知 Black-Scholes 方程
+$$\frac{\partial u}{\partial t} + \frac{1}{2}\sigma^2S^2\frac{\partial^2 u}{\partial S^2} + rs\frac{\partial u}{\partial S} - ru = 0$$
 
+其中$(S, t) \in [0, S_{max}] × [0, T]$ ,
+
+欧式看涨期权满足条件：
+\begin{equation}
+    \left\{
+            \begin{array}{lr}
+            u(0, t) = 0, & \\
+            \vspace{1ex}
+            u(S_{max}, t) = S_{max} - K, & \\
+            \vspace{1ex}
+            u(S, T) = max(S - K, 0). &  
+            \end{array}
+    \right.
+    \nonumber
+\end{equation}
+
+
+\vspace{2ex}
+
+我们首先进行变量代换，令$\tau = t-T$，$x = \ln S$，则原方程可以变为：
 $$\frac{\partial u}{\partial \tau} + \frac{1}{2}\sigma^2\frac{\partial^2 u}{\partial x^2} + (r-\frac{1}{2}\sigma^2)\frac{\partial u}{\partial x} - r u = 0$$
 
 边界条件变为：$u(x=0, \tau) = 0$，$u(x=x_{\max}, \tau) = e^{x_{\max}}-K$。
@@ -31,14 +55,12 @@ $$\frac{\partial u}{\partial \tau} + \frac{1}{2}\sigma^2\frac{\partial^2 u}{\par
 
 此外，我们使用记号$u_{i,j} \approx u(x_i, t_j) = u(i\Delta x, j\Delta t) = u(ih, j\tau)$，作为数值逼近的解。其中 $i = 0,..., N + 1$，$j = 0,..., M$。需要计算的网格点为 $i = 1,..., N$，$j = 1,..., M$。
 
-% \begin{figure}[h]
-%   \centering
-%   \includegraphics[width=0.5\textwidth]{C:/test.jpg}
-%   \caption{这是图片的标题}
-%   \label{fig:example}
-% \end{figure} 
-
-% 如图 \ref{fig:example} 所示，这是一张图片。
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.64\textwidth,height=0.64\textwidth]{Images/1_grid.png}
+  \caption{标准网格}
+  \label{fig:1_grid}
+\end{figure} 
 
 
 
@@ -96,11 +118,18 @@ z = \begin{pmatrix}
 $$
 
 
+
+
+
 \subsection{时间方向上的离散}
 
 下面我们讨论半离散方程在时间方向上的离散。
 
 我们考虑显式欧拉格式，隐式欧拉格式 和 Crank-Nicolson 格式。
+
+
+
+
 
 \subsubsection{显式欧拉格式}
 
@@ -126,6 +155,14 @@ z\tau = \begin{pmatrix}
             \tau cu_{N+1, j} \\
         \end{pmatrix},
 $$
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.64\textwidth,height=0.64\textwidth]{Images/2_ExpEu.png}
+  \caption{显式欧拉格式}
+  \label{fig:2_ExpEu}
+\end{figure} 
+
 
 \subsubsection{隐式欧拉格式}
 
@@ -153,9 +190,21 @@ z\tau = \begin{pmatrix}
 $$
 
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.64\textwidth,height=0.64\textwidth]{Images/3_ImpEu.png}
+  \caption{隐式欧拉格式}
+  \label{fig:3_ImpEu}
+\end{figure} 
+
+
+
+
+
+
 \subsubsection{Crank-Nicolson 格式}
 
-在时间方向上采用中心差分格式，可以看作是隐式和显式欧拉格式的平均。
+在时间方向上采用中心差分格式，可以看作隐式和显式格式的平均。
 
 将显式欧拉格式的半离散方程中下标$j-1$改成$j$，$j$改成$j+1$，之后将新得到的方程同隐式欧拉格式的半离散方程相加，得到
 $$\frac{u_{i, j+1} - u_{i, j}}{\tau} + \frac{1}{2}[(au_{i-1, j} + bu_{i, j} + cu_{i+1, j}) + (au_{i-1, j+1} + bu_{i, j+1} + cu_{i+1, j+1})] = 0$$
@@ -181,5 +230,33 @@ $$
             \end{pmatrix}.
 $$
 
-\end{document}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.64\textwidth,height=0.64\textwidth]{Images/4_CNEu.png}
+  \caption{Crank-Nicolson 格式}
+  \label{fig:4_CNEu}
+\end{figure} 
+
+
+\section{求解过程可视化}
+
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|}
+\hline
+1 & \includegraphics[width=0.4\textwidth]{Images/5_option_price_surface_4iter_step0.png} \\
+\hline
+2 & \includegraphics[width=0.4\textwidth]{Images/6_option_price_surface_4iter_step1.png} \\
+\hline
+\end{tabular}
+\caption{一个带有图像的表格示例}
+\label{table:example}
+\end{table}
+
+
+
+
+
+\end{document}
