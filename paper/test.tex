@@ -5,6 +5,8 @@
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{array}
+\usepackage{longtable}
+
  
 \title{期权定价实验}
 \author{}
@@ -21,7 +23,7 @@
 \section{变量代换}
 
 已知 Black-Scholes 方程
-$$\frac{\partial u}{\partial t} + \frac{1}{2}\sigma^2S^2\frac{\partial^2 u}{\partial S^2} + rs\frac{\partial u}{\partial S} - ru = 0$$
+$$\frac{\partial u}{\partial t} + \frac{1}{2}\sigma^2S^2\frac{\partial^2 u}{\partial S^2} + rS\frac{\partial u}{\partial S} - ru = 0$$
 
 其中$(S, t) \in [0, S_{max}] × [0, T]$ ,
 
@@ -50,8 +52,9 @@ $$\frac{\partial u}{\partial \tau} + \frac{1}{2}\sigma^2\frac{\partial^2 u}{\par
 终止条件变为：$u(x,\tau=0) = g(x) = \max(e^x-K,0)$。
 
 
+\newpage
 \section{构建网格}
-我们在计算区域 $[0, x] × [-T, 0]$ 上划分标准网格，记空间方向上步长 $h = \Delta x = \frac{S}{(N + 1)}$，时间方向上步长 $\tau = \Delta t = \frac{T}{M}$。在空间方向上我们已知两个边界的值，而时间方向仅有一个边界条件，因此空间方向比时间方向多离散一个网格，保证最终要求解的网格点数为 $M × N$。
+我们在计算区域 $[0, x] × [-T, 0]$ 上划分标准网格，记空间方向上步长 $h = \Delta x = \frac{S}{(N + 1)}$，时间方向上步长 $\tau = \Delta t = \frac{T}{M}$。在空间方向上我们已知两个边界的值，而时间方向仅有一个边界条件，因此空间方向比时间方向多离散一个网格，保证最终要求解的网格点数为 $N × M$。
 
 此外，我们使用记号$u_{i,j} \approx u(x_i, t_j) = u(i\Delta x, j\Delta t) = u(ih, j\tau)$，作为数值逼近的解。其中 $i = 0,..., N + 1$，$j = 0,..., M$。需要计算的网格点为 $i = 1,..., N$，$j = 1,..., M$。
 
@@ -64,6 +67,7 @@ $$\frac{\partial u}{\partial \tau} + \frac{1}{2}\sigma^2\frac{\partial^2 u}{\par
 
 
 
+\newpage
 \section{离散方式}
 
 
@@ -137,6 +141,15 @@ $$
 代入半离散方程得到：$$\frac{u_{i, j} - u_{i, j-1}}{\tau} + au_{i-1, j} + bu_{i, j} + cu_{i+1, j} = 0$$
 $$\Rightarrow u_{i, j-1} = \tau au_{i-1, j} + (1 + \tau b)u_{i, j} + \tau cu_{i+1, j}$$
 
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\textwidth,height=0.7\textwidth]{Images/2_ExpEu.png}
+  \caption{显式欧拉格式}
+  \label{fig:2_ExpEu}
+\end{figure}
+
+
 当指标$i$取遍 $1,...,N$ 时，得到线性方程组$$\bar{u}_{j-1} = (I + \tau B)\bar{u}_{j} + z\tau,$$
 其中$\bar{u}_{j} = (u_{1, j}, u_{2, j},...,u_{N, j})^T,$
 $$
@@ -156,12 +169,7 @@ z\tau = \begin{pmatrix}
         \end{pmatrix},
 $$
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.64\textwidth,height=0.64\textwidth]{Images/2_ExpEu.png}
-  \caption{显式欧拉格式}
-  \label{fig:2_ExpEu}
-\end{figure} 
+ 
 
 
 \subsubsection{隐式欧拉格式}
@@ -169,6 +177,15 @@ $$
 在时间方向上的隐式欧拉格式为$$\frac{\partial u}{\partial \tau}(x_i, t_j) = \frac{u_{i, j+1} - u_{i, j}}{\tau}$$
 代入半离散方程得到：$$\frac{u_{i, j+1} - u_{i, j}}{\tau} + au_{i-1, j} + bu_{i, j} + cu_{i+1, j} = 0$$
 $$\Rightarrow -\tau au_{i-1, j} + (1 - \tau b)u_{i, j} - \tau cu_{i+1, j} = u_{i, j+1}$$
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\textwidth,height=0.7\textwidth]{Images/3_ImpEu.png}
+  \caption{隐式欧拉格式}
+  \label{fig:3_ImpEu}
+\end{figure}
+
 
 当指标$i$取遍 $1,...,N$ 时，得到线性方程组$$(I - \tau B)\bar{u}_{j} = \bar{u}_{j+1} + z\tau,$$
 其中$\bar{u}_{j} = (u_{1, j}, u_{2, j},...,u_{N, j})^T,$
@@ -190,12 +207,7 @@ z\tau = \begin{pmatrix}
 $$
 
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.64\textwidth,height=0.64\textwidth]{Images/3_ImpEu.png}
-  \caption{隐式欧拉格式}
-  \label{fig:3_ImpEu}
-\end{figure} 
+ 
 
 
 
@@ -208,6 +220,15 @@ $$
 
 将显式欧拉格式的半离散方程中下标$j-1$改成$j$，$j$改成$j+1$，之后将新得到的方程同隐式欧拉格式的半离散方程相加，得到
 $$\frac{u_{i, j+1} - u_{i, j}}{\tau} + \frac{1}{2}[(au_{i-1, j} + bu_{i, j} + cu_{i+1, j}) + (au_{i-1, j+1} + bu_{i, j+1} + cu_{i+1, j+1})] = 0$$
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\textwidth,height=0.7\textwidth]{Images/4_CNEu.png}
+  \caption{Crank-Nicolson 格式}
+  \label{fig:4_CNEu}
+\end{figure} 
+
 
 同时得到线性方程组$$(2I - \tau B)\bar{u}_{j} = (2I + \tau B)\bar{u}_{j+1} + 2z\tau$$
 其中
@@ -231,32 +252,81 @@ $$
 $$
 
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.64\textwidth,height=0.64\textwidth]{Images/4_CNEu.png}
-  \caption{Crank-Nicolson 格式}
-  \label{fig:4_CNEu}
-\end{figure} 
 
 
+
+\newpage
 \section{求解过程可视化}
 
+已知无风险利率 $r = 0.3$, 波动率 $\sigma = 0.5$, 行权价格$K = 50$, 到期时间$T = 1$。
 
-\begin{table}[h!]
-\centering
-\begin{tabular}{|c|c|}
-\hline
-1 & \includegraphics[width=0.4\textwidth]{Images/5_option_price_surface_4iter_step0.png} \\
-\hline
-2 & \includegraphics[width=0.4\textwidth]{Images/6_option_price_surface_4iter_step1.png} \\
-\hline
-\end{tabular}
-\caption{一个带有图像的表格示例}
-\label{table:example}
-\end{table}
+将时间空间分别四等分（即$N=4, M=4$），用显示格式差分离散求解方程的过程如下：
+
+\begin{longtable}{|c|c|}
+    \hline
+    时点 & 图 \\
+    \hline
+    $t_4 = T$ & \includegraphics[width=0.6\textwidth]{Images/5_option_price_surface_4iter_step0.png} \\
+    \hline
+    $t_3$ & \includegraphics[width=0.6\textwidth]{Images/6_option_price_surface_4iter_step1.png} \\
+    \hline
+    $t_2$ & \includegraphics[width=0.6\textwidth]{Images/7_option_price_surface_4iter_step2.png} \\
+    \hline
+    $t_1$ & \includegraphics[width=0.6\textwidth]{Images/8_option_price_surface_4iter_step3.png} \\
+    \hline
+    $t_0$ & \includegraphics[width=0.6\textwidth]{Images/9_option_price_surface_4iter_step4.png} \\
+    \hline
+\end{longtable}
+
+如果$S = 40$，这里的蓝点就是我们所求的期权价格。
 
 
 
+\newpage
+\section{比较三种差分格式}
 
+
+\subsubsection{分割次数为100时的期权价格图}
+
+设置$N=100, M=100$：
+
+\begin{longtable}{|c|c|}
+    \hline
+    显式格式 & \includegraphics[width=0.75\textwidth]{Images/13_option_price_surface_Exp_(100,100).png} \\
+    \hline
+    隐式格式 & \includegraphics[width=0.75\textwidth]{Images/10_option_price_surface_Imp_(100,100).png} \\
+    \hline
+    C-N格式 & \includegraphics[width=0.75\textwidth]{Images/14_option_price_surface_CN_(100,100).png} \\
+    \hline
+\end{longtable}
+
+结论：隐式格式和C-N格式的结果是收敛的，显式格式的结果有巨大误差。
+
+
+\subsubsection{观察不同分割次数的显式格式期权价格图：}
+
+
+\begin{longtable}{|c|c|}
+    \hline
+    $N=10, M=10$ & \includegraphics[width=0.75\textwidth]{Images/11_option_price_surface_Exp_(10,10).png} \\
+    \hline
+    $N=20, M=20$ & \includegraphics[width=0.75\textwidth]{Images/12_option_price_surface_Exp_(20,20).png} \\
+    \hline
+    $N=100, M=100$ & \includegraphics[width=0.75\textwidth]{Images/13_option_price_surface_Exp_(100,100).png} \\
+    \hline
+\end{longtable}
+
+结论：显示格式随着分割网格的次数增加，误差也随之增加，故不收敛。
+
+
+\subsubsection{比较隐式格式与C-N格式的收敛速度：}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1.2\textwidth,height=0.6\textwidth]{Images/15_error.png}
+  \label{fig:15_error}
+\end{figure} 
+
+结论：两种格式都收敛，而且C-N格式的收敛速度更快
 
 \end{document}

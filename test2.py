@@ -5,7 +5,8 @@ import scipy.interpolate as spi
 import scipy.sparse as sp
 import scipy.linalg as sla
 import matplotlib as mpl
-import matplotlib.pyplot as plt
+import matplotlib
+from matplotlib import pyplot as plt
 import matplotlib.ticker as ticker
 from mpl_toolkits.mplot3d import Axes3D
 mpl.rcParams['font.sans-serif'] = ['Microsoft YaHei']
@@ -317,7 +318,7 @@ def PDE_visualizer( option, step=0 ):
     
     (S0, K, r, q, omega) = (option.S, option.K, option.r, option.q, option.omega)
     
-    fig = plt.figure(figsize=(6,4), dpi=100)
+    fig = plt.figure(figsize=(10,8), dpi=200)
     ax = Axes3D(fig, auto_add_to_figure=False)
     fig.add_axes(ax)
     
@@ -379,7 +380,7 @@ for i in range(5):
 
 
 def plot_surface( func, S, K, r, q, T, sigma, option_type, Smin, Smax, Ns, Nt ):
-    fig = plt.figure(figsize=(8,4), dpi=240)
+    fig = plt.figure(figsize=(10,8), dpi=250)
     ax = fig.add_subplot(1, 1, 1, projection='3d')
 
     option = func( S, K, r, q, T, sigma, option_type, Smin, Smax, Ns, Nt )    
@@ -391,12 +392,24 @@ def plot_surface( func, S, K, r, q, T, sigma, option_type, Smin, Smax, Ns, Nt ):
     ax.set_xlabel('时间')
     ax.set_ylabel('股价')
     ax.set_zlabel('期权价格')
-    ax.view_init(elev=30, azim=160)
+    # ax.view_init(elev=30, azim=160)
 
-    plt.show()
 
 plot_surface( FullyImplicitEu, S, K, r, q, T, sigma, option_type, Smin, Smax, 100, 100)
+plt.savefig(f'paper/10_option_price_surface_Imp_(100,100).png')
+plt.show()
+plot_surface( FullyExplicitEu, S, K, r, q, T, sigma, option_type, Smin, Smax, 10, 10)
+plt.savefig(f'paper/11_option_price_surface_Exp_(10,10).png')
+plt.show()
+plot_surface( FullyExplicitEu, S, K, r, q, T, sigma, option_type, Smin, Smax, 20, 20)
+plt.savefig(f'paper/12_option_price_surface_Exp_(20,20).png')
+plt.show()
 plot_surface( FullyExplicitEu, S, K, r, q, T, sigma, option_type, Smin, Smax, 100, 100)
+plt.savefig(f'paper/13_option_price_surface_Exp_(100,100).png')
+plt.show()
+plot_surface( CrankNicolsonEu, S, K, r, q, T, sigma, option_type, Smin, Smax, 100, 100)
+plt.savefig(f'paper/14_option_price_surface_CN_(100,100).png')
+plt.show()
 
 
 # 检查结果是否收敛
@@ -433,5 +446,5 @@ ax.set_xlabel('ln(时段数)')
 ax.set_ylabel('绝对差异')
 ax.set_title('有限差分数值解 Vs 解析解')
 plt.legend()
-plt.savefig(f'paper/14_error.png')
+plt.savefig(f'paper/15_error.png')
 plt.show()
